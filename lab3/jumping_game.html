@@ -8,86 +8,256 @@
     <link href="https://fonts.googleapis.com/css2?family=Dosis:wght@700&display=swap" rel="stylesheet">
 
     <style>
-    /* Style to make the svg fit in the browser */
-    body { padding: 0; margin: 0; }
-    svg  { width: 100%; height: auto; }
+        /* Style to make the svg fit in the browser */
+        body {
+            padding: 0;
+            margin: 0;
+        }
 
-    /* The container moves the text to the middle of the screen */
-    #gameover-container {
-        transform: translate(500px,200px);
-    }
-    #gameover {
-        font-family: Dosis, sans-serif;
-    }
+        svg {
+            width: 100%;
+            height: auto;
+        }
+
+        /* The container moves the text to the middle of the screen */
+        #gameover-container {
+            transform: translate(500px, 200px);
+        }
+
+        #gameover {
+            font-family: Dosis, sans-serif;
+        }
+
+        @keyframes cloud-animation {
+            from {
+                transform: translateX(1000px);
+            }
+            to {
+                transform: translateX(-450px);
+            }
+        }
+
+        @keyframes obstacle-animation {
+            from {
+                transform: translateX(30px);
+            }
+            to {
+                transform: translateX(-1000px);
+            }
+        }
+
+        #obstacle {
+            animation-name: none;
+            animation-timing-function: linear;
+            animation-iteration-count: 1;
+            animation-duration: 8s;
+            display: none;
+        }
+
+        @keyframes player-animation {
+            0% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-100px);
+            }
+            100% {
+                transform: translateY(0px);
+            }
+        }
+
+        #player {
+            animation-name: none;
+            animation-timing-function: linear;
+            animation-iteration-count: 1;
+            animation-duration: 1s;
+        }
     </style>
     <script>
-    // Check whether the game is over if the player is near the obstacle
-    function checkGameover() {
+        const cloudInstances = [];
+        // Check whether the game is over if the player is near the obstacle
+        function checkGameover() {
 
-        // You need to keep on checking for the gameover situation here
+            // You need to keep on checking for the gameover situation here
+            const player = $("#player")
+            const obstacle = $("#obstacle")
+            // Read the transform property of the player and obstacl    e
+            const playerTransform = player.css("transform")
+            const obstacleTransform = obstacle.css("transform")
+            // Extract the appropriate numbers
+            let playery = parseFloat(playerTransform.split(",")[5])
+            if (isNaN(playery)) playery = 0;
+            let obstaclex = parseFloat(obstacleTransform.split(",")[4])
+            if (isNaN(obstaclex)) obstaclex = 0;
+            // Compare the numbers for the gameover situation
+            if (obstaclex > -830 && obstaclex < -770  && playery > -5) {
+                $("#cloud0").css("animation-name", "none");
+                $("#cloud1").css("animation-name", "none");
+                $("#cloud2").css("animation-name", "none");
+                player.css("animation-name", "none");
+                obstacle.css("animation-name", "none")
+                // The game is over
+                $("#gameover").fadeIn();
+                return
+            }
+            // Request to check again
+            setTimeout(checkGameover, 100);
+        }
 
-        // Read the transform property of the player and obstacle
+        // Make an obstacle by starting the obstacle animation
+        function makeObstacle() {
+            // You need to show the obstacle and start the animation here
+            const obstacle = $("#obstacle")
+            obstacle.css("display", "inline");
+            obstacle.css("animation-name", "obstacle-animation")
+        }
 
-        // Extract the appropriate numbers
+        // Make the player jump by starting the player animation
+        function jump() {
 
-        // Compare the numbers for the gameover situation
+            // You need to start the player jumping animation here
+            const player = $("#player")
+            player.css("animation-name", "player-animation")
 
-        // Request to check again
-        setTimeout(checkGameover, 100);
-    }
+        }
 
-    // Make an obstacle by starting the obstacle animation
-    function makeObstacle() {
+        $(document).ready(function () {
+            // Handle the spacebar key for controlling the player
+            $(document).on("keydown", function (e) {
+                // The player jumps if the spacebar key is down
+                if (e.keyCode == 32)
+                    jump();
+            });
+            $("#gameover").css("display", "none");
+            let animationDelay = 0;
+            for (let i = 0; i < 3; i++) {
+                const x = Math.random() * 500;
+                const y = Math.random() * 100;
+                const cloud = new Cloud(`cloud${i}`, animationDelay, x, y);
+                animationDelay += 4.7;
+            }
+            // The obstacle animation has finished
+            $("#obstacle").on("animationend", function () {
 
-        // You need to show the obstacle and start the animation here
+                // You need to hide the obstacle and stop the animation here
+                const obstacle = $("#obstacle")
+                obstacle.css("display", "none");
+                obstacle.css("animation-name", "none");
+                let currentDuration = parseFloat(obstacle.css("animation-duration"));
+                if (currentDuration > .5)
+                    obstacle.css("animation-duration", `${currentDuration - .5}s`);
+                // You will make another obstacle later
+                setTimeout(makeObstacle, Math.random() * 2000);
+            });
 
-    }
+            // The player animation has finished
+            $("#player").on("animationend", function () {
 
-    // Make the player jump by starting the player animation
-    function jump() {
+                // You need to stop the animation here
+                const player = $("#player")
+                player.css("animation-name", "none");
+            });
 
-        // You need to start the player jumping animation here
+            // Start the obstacle animation
+            setTimeout(makeObstacle, Math.random() * 2000);
 
-    }
-
-    $(document).ready(function () {
-        // Handle the spacebar key for controlling the player
-        $(document).on("keydown", function(e) {
-            // The player jumps if the spacebar key is down
-            if (e.keyCode == 32)
-                jump();
+            // Start the game over checking
+            setTimeout(checkGameover, 100);
         });
 
-        // The obstacle animation has finished
-        $("#obstacle").on("animationend", function() {
 
-            // You need to hide the obstacle and stop the animation here
+        class Cloud {
+            constructor(id, animationDelay, x, y) {
+                this.id = id;
+                this.animationDelay = animationDelay;
+                this.x = x;
+                this.y = y;
+                this.createCloud();
+                cloudInstances.push(this)
+            }
 
-            // You will make another obstacle later
+            createCloud() {
+                const cloudGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                cloudGroup.id = this.id;
 
-        });
+                const cloudShape = [
+                    {cx: 280, cy: 100 + this.y, r: 30},
+                    {cx: 310, cy: 100 + this.y, r: 35},
+                    {cx: 340, cy: 100 + this.y, r: 30},
+                    {cx: 370, cy: 100 + this.y, r: 35},
+                    {cx: 400, cy: 100 + this.y, r: 30}
+                ];
 
-        // The player animation has finished
-        $("#player").on("animationend", function() {
+                cloudShape.forEach(circle => {
+                    const cloudCircle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    cloudCircle.setAttribute("cx", circle.cx);
+                    cloudCircle.setAttribute("cy", circle.cy);
+                    cloudCircle.setAttribute("r", circle.r);
+                    cloudCircle.setAttribute("fill", "white");
+                    cloudGroup.appendChild(cloudCircle);
+                });
 
-            // You need to stop the animation here
+                cloudGroup.style.animationDelay = `${this.animationDelay}s`;
+                cloudGroup.style.animationName = "cloud-animation";
+                cloudGroup.style.animationTimingFunction = "linear";
+                cloudGroup.style.animationIterationCount = "infinite";
+                cloudGroup.style.animationDuration = "15s";
 
-        });
 
-        // Start the obstacle animation
-        setTimeout(makeObstacle, Math.random() * 2000);
+                cloudGroup.style.transform = `translateX(${this.x + 1000}px) translateY(${this.y}px)`;
 
-        // Start the game over checking
-        setTimeout(checkGameover, 100);
-    });
+                document.getElementById("cloud").appendChild(cloudGroup);
+            }
+            stopAnimation() {
+                this.cloudCircles.forEach(circle => {
+                    circle.style.animationName = "none";
+                });
+            }
+        }
+
     </script>
 </head>
 <body>
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 400">
-        <!-- The game over text -->
-        <g id="gameover-container">
-            <text id="gameover" x="0" y="0" fill="red"
-                  font-size="80px" text-anchor="middle">Game Over</text>
-        </g>
-    </svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="400" viewBox="0 0 1000 400">
+    <defs>
+        <linearGradient y2="1" x2="0" id="sky">
+            <stop offset="0" stop-color="darkblue"/>
+            <stop offset="1" stop-color="orange"/>
+        </linearGradient>
+        <linearGradient id="groundGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color: lightgreen"/>
+            <stop offset="50%" style="stop-color: green"/>
+            <stop offset="100%" style="stop-color: #00260d"/>
+        </linearGradient>
+        <linearGradient id="obstacleGradient" x1="0%" y1="0%" x2="0" y2="100%">
+            <stop offset="0%" stop-color="brown"/>
+            <stop offset="100%" stop-color="black"/>
+        </linearGradient>
+    </defs>
+
+    <g id="sky">
+        <rect x="0" y="0" width="1000" height="400" fill="url(#sky)"/>
+    </g>
+    <g id="ground">
+        <rect x="0" y="300" width="1000" height="100" fill="url(#groundGradient)"/>
+        <rect x="0" y="300" width="1000" height="10" fill="lightgreen"/>
+    </g>
+    <g id="cloud"></g>
+    <g id="obstacle">
+        <rect x="900" y="300" width="50" height="100" fill="url(#obstacleGradient)"/>
+    </g>
+    <g id="player">
+        <circle id="body" cx="100" cy="270" r="30" fill="pink"/>
+        <circle id="left-eye" cx="90" cy="260" r="5" fill="white"/>
+        <circle id="right-eye" cx="110" cy="260" r="5" fill="white"/>
+        <circle id="leftpupil" cx="90" cy="260" r="2" fill="black"/>
+        <circle id="rightpupil" cx="110" cy="260" r="2" fill="black"/>
+        <path id="mouth" d="M90 275 Q100 280 110 270" stroke="black" stroke-width="2" fill="none"/>
+    </g>
+
+    <text id="gameover" x="500" y="200" fill="red"
+          font-size="80px" text-anchor="middle">Game Over
+    </text>
+</svg>
+</body>
 </html>
