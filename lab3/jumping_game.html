@@ -81,7 +81,7 @@
             // You need to keep on checking for the gameover situation here
             const player = $("#player")
             const obstacle = $("#obstacle")
-            // Read the transform property of the player and obstacl    e
+            // Read the transform property of the player and obstacle
             const playerTransform = player.css("transform")
             const obstacleTransform = obstacle.css("transform")
             // Extract the appropriate numbers
@@ -91,11 +91,13 @@
             if (isNaN(obstaclex)) obstaclex = 0;
             // Compare the numbers for the gameover situation
             if (obstaclex > -830 && obstaclex < -770  && playery > -5) {
-                $("#cloud0").css("animation-name", "none");
-                $("#cloud1").css("animation-name", "none");
-                $("#cloud2").css("animation-name", "none");
-                player.css("animation-name", "none");
-                obstacle.css("animation-name", "none")
+                $("#cloud0").css("animation-play-state", "paused");
+                $("#cloud1").css("animation-play-state", "paused");
+                $("#cloud2").css("animation-play-state", "paused");
+                obstacle.css("animation-play-state", "paused")
+                player.css("animation-play-state", "paused")
+
+
                 // The game is over
                 $("#gameover").fadeIn();
                 return
