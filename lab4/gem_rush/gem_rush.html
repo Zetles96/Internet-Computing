@@ -166,7 +166,8 @@
 
 
             if (player.getBoundingBox().isPointInBox(gem.getXY().x, gem.getXY().y)) {
-                sounds.collect.pause();
+                sounds.collect.pause()
+                sounds.collect.currentTime = 0;
                 sounds.collect.play();
                 collectedGems++;
                 gem.randomize(gameArea);
@@ -181,7 +182,6 @@
             /* Draw the sprites */
             gem.draw();
             player.draw();
-            // make a for each loopo to draw the fires
             fires.forEach(fire => {
                 fire.draw();
             })
